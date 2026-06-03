@@ -106,17 +106,37 @@ function updateControlPanel(status, teams) {
   const round     = adminState.currentRound;
   const submitted = teams.filter(t => t.team_rounds?.some(r => r.round_number===round && r.submitted)).length;
 
+  const sm = status.match(/^(round|results)(\d)$/);
+  const statusLabel = sm
+    ? (status.startsWith('round') ? `Round ${sm[2]} — collecting` : `Round ${sm[2]} — results`)
+    : status === 'final' ? 'Final results' : 'Lobby';
   setText('ctrl-round',     `${round} / 4`);
-  setText('ctrl-status',    status);
+  setText('ctrl-status',    statusLabel);
   setText('ctrl-submitted', `${submitted} / ${teams.length}`);
 
   ['start-game-btn','reveal-results-btn','next-round-btn','final-results-btn'].forEach(id => hide(id));
 
-  if (status === 'lobby') show('start-game-btn');
-  else if (/^round\d$/.test(status)) show('reveal-results-btn');
-  else if (/^results\d$/.test(status)) {
+  const allIn = teams.length > 0 && submitted === teams.length;
+
+  if (status === 'lobby') {
+    show('start-game-btn');
+  } else if (/^round\d$/.test(status)) {
+    const btn = document.getElementById('reveal-results-btn');
+    show('reveal-results-btn');
+    if (btn) {
+      btn.textContent = allIn
+        ? `📊 Reveal Round ${round} Results (all ${teams.length} in)`
+        : `📊 Reveal Round ${round} Results (${submitted}/${teams.length})`;
+    }
+  } else if (/^results\d$/.test(status)) {
     const r = parseInt(status.replace('results',''), 10);
-    show(r < 4 ? 'next-round-btn' : 'final-results-btn');
+    if (r < 4) {
+      const btn = document.getElementById('next-round-btn');
+      show('next-round-btn');
+      if (btn) btn.textContent = `▶ Start Round ${r + 1}`;
+    } else {
+      show('final-results-btn');
+    }
   }
 }
 
@@ -410,10 +430,16 @@ async function submitManualEntry() {
 
   if (roundErr) { showToast('Error saving data.', 'error'); return; }
 
-  const team = adminState.teams.find(t => t.id === teamId);
-  const prevTotal = team?.total_revenue || 0;
-  await sb.from('teams').update({ total_revenue: prevTotal + revenue }).eq('id', teamId);
+  // Recompute total as the SUM of all submitted rounds (idempotent — matches team-side logic)
+  const { data: allRounds } = await sb.from('team_rounds')
+    .select('revenue, submitted')
+    .eq('team_id', teamId);
+  const newTotal = (allRounds || [])
+    .filter(r => r.submitted)
+    .reduce((sum, r) => sum + (r.revenue || 0), 0);
+  await sb.from('teams').update({ total_revenue: newTotal }).eq('id', teamId);
 
+  const team = adminState.teams.find(t => t.id === teamId);
   document.getElementById('manual-modal')?.classList.add('hidden');
   showToast(`Submitted for ${team?.name || teamId}`, 'success');
 }

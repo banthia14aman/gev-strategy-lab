@@ -89,9 +89,9 @@ function formatTime(sec) {
   return `${Math.floor(sec/60)}:${(sec%60).toString().padStart(2,'0')}`;
 }
 
-function startLocalTimer(durationSec) {
+function startLocalTimer(startRemaining) {
   clearInterval(state.timerInterval);
-  state.timerRemaining = durationSec;
+  state.timerRemaining = Math.max(0, Math.round(startRemaining));
   const el = document.getElementById('timer-display');
   const tick = () => {
     if (!el) return;
@@ -386,9 +386,13 @@ async function refreshState() {
     updateRoundPips(r);
     renderEventCard(r - 1);
 
-    // Start timer once per round (resetRoundUI clears it, so this fires exactly once)
+    // Start timer once per round (resetRoundUI clears it, so this fires exactly once).
+    // Sync the countdown to when the round actually started (game_state.updated_at) so
+    // every team — including late joiners and refreshes — sees the same time remaining.
     if (!state.timerInterval) {
-      startLocalTimer(SIM.game.roundDuration);
+      const startedAt = gameRow.updated_at ? new Date(gameRow.updated_at).getTime() : Date.now();
+      const elapsed   = (Date.now() - startedAt) / 1000;
+      startLocalTimer(SIM.game.roundDuration - elapsed);
     }
 
     if (state.hasSubmitted) {
@@ -464,12 +468,17 @@ async function submitAllocation() {
 
     if (roundErr) throw roundErr;
 
-    // Get current total and add this round's revenue
-    const { data: teamRow } = await sb.from('teams').select('total_revenue').eq('id', state.teamId).single();
-    const prevTotal = teamRow?.total_revenue || 0;
+    // Recompute total as the SUM of all submitted rounds (idempotent — never double-counts,
+    // safe against double-clicks, retries, and facilitator manual entry for the same round)
+    const { data: allRounds } = await sb.from('team_rounds')
+      .select('revenue, submitted')
+      .eq('team_id', state.teamId);
+    const newTotal = (allRounds || [])
+      .filter(r => r.submitted)
+      .reduce((sum, r) => sum + (r.revenue || 0), 0);
 
     await sb.from('teams').update({
-      total_revenue: prevTotal + revenue,
+      total_revenue: newTotal,
       last_active:   new Date().toISOString(),
     }).eq('id', state.teamId);
 
