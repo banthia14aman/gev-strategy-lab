@@ -8,6 +8,7 @@ const ROUND_DURATION = 120;
 let SIM = null;
 let sb  = null;
 let realtimeChannel = null;
+let pollingInterval = null;
 
 // ─── Admin state ──────────────────────────────────────────────
 const adminState = {
@@ -420,14 +421,17 @@ async function submitManualEntry() {
 // ─── Subscribe ────────────────────────────────────────────────
 function subscribeToGame() {
   if (realtimeChannel) sb.removeChannel(realtimeChannel);
+  if (pollingInterval)  clearInterval(pollingInterval);
+
   realtimeChannel = sb.channel('admin-room')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'game_state'  }, refreshAdminState)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'teams'       }, refreshAdminState)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'team_rounds' }, refreshAdminState)
     .subscribe();
 
-  // Fetch immediately via REST — don't wait for WebSocket handshake
+  // REST polling every 2 s for admin — faster refresh for facilitator view
   refreshAdminState();
+  pollingInterval = setInterval(refreshAdminState, 2000);
 }
 
 // ─── Team link ────────────────────────────────────────────────

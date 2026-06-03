@@ -3,8 +3,9 @@
 'use strict';
 
 let SIM = null;
-let sb  = null;   // Supabase client
+let sb  = null;
 let realtimeChannel = null;
+let pollingInterval = null;
 
 // ─── Team state ───────────────────────────────────────────────
 const state = {
@@ -397,6 +398,7 @@ async function refreshState() {
 
   if (status === 'final') {
     clearInterval(state.timerInterval);
+    clearInterval(pollingInterval);
     state.timerInterval = null;
     setScreen('final');
     renderFinalScreen(teams);
@@ -490,15 +492,18 @@ async function joinGame(name) {
 // ─── Subscribe to real-time changes ──────────────────────────
 function subscribeToGame() {
   if (realtimeChannel) sb.removeChannel(realtimeChannel);
+  if (pollingInterval)  clearInterval(pollingInterval);
 
+  // WebSocket subscriptions (bonus — works when Supabase realtime is fully available)
   realtimeChannel = sb.channel('game-room')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'game_state'  }, refreshState)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'teams'       }, refreshState)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'team_rounds' }, refreshState)
     .subscribe();
 
-  // Fetch state immediately via REST — don't block on WebSocket handshake
+  // REST polling every 3 s — primary sync mechanism, guarantees state stays current
   refreshState();
+  pollingInterval = setInterval(refreshState, 3000);
 }
 
 // ─── Boot ────────────────────────────────────────────────────
