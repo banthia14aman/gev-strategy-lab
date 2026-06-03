@@ -118,6 +118,40 @@ function getSliderValues() {
   };
 }
 
+// Auto-balance: when one slider moves, redistribute the remaining budget across
+// the other two proportionally, so the three always sum to exactly 100.
+function rebalanceSliders(changedSeg) {
+  const segs   = ['power', 'wind', 'electrification'];
+  const others = segs.filter(s => s !== changedSeg);
+
+  const changed = document.getElementById(`slider-${changedSeg}`);
+  const o1      = document.getElementById(`slider-${others[0]}`);
+  const o2      = document.getElementById(`slider-${others[1]}`);
+  if (!changed || !o1 || !o2) return;
+
+  const v = Math.max(0, Math.min(100, parseInt(changed.value, 10) || 0));
+  const remaining = 100 - v;
+
+  let a = parseInt(o1.value, 10) || 0;
+  let b = parseInt(o2.value, 10) || 0;
+  const sumOthers = a + b;
+
+  if (sumOthers === 0) {
+    a = Math.round(remaining / 2);
+    b = remaining - a;
+  } else {
+    a = Math.round(remaining * (a / sumOthers));
+    b = remaining - a;            // guarantees a + b === remaining exactly
+  }
+
+  changed.value = v;
+  o1.value = a;
+  o2.value = b;
+
+  [changed, o1, o2].forEach(updateSliderBackground);
+  updateTotalBar();
+}
+
 function updateTotalBar() {
   const { power, wind, electrification } = getSliderValues();
   const total = power + wind + electrification;
@@ -594,11 +628,11 @@ async function init() {
   joinBtn?.addEventListener('click', doJoin);
   nameInput?.addEventListener('keydown', e => e.key === 'Enter' && doJoin());
 
-  // Sliders
+  // Sliders — auto-balance so the three always sum to exactly 100
   ['power','wind','electrification'].forEach(seg => {
     const slider = document.getElementById(`slider-${seg}`);
     if (!slider) return;
-    slider.addEventListener('input', () => { updateSliderBackground(slider); updateTotalBar(); });
+    slider.addEventListener('input', () => rebalanceSliders(seg));
     updateSliderBackground(slider);
   });
   updateTotalBar();
