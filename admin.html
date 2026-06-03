@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GE Vernova Strategy Lab — Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ─── Admin-specific styles ───────────────────── */
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 0;
+      min-height: calc(100vh - 60px);
+    }
+
+    @media (max-width: 900px) {
+      .admin-layout { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Left panel (controls) ───────────────────── */
+    .admin-sidebar {
+      background: var(--gev-surface);
+      border-right: 1px solid var(--gev-border);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      overflow-y: auto;
+    }
+
+    .control-section {
+      background: var(--gev-surface-2);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .control-section-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--gev-border);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gev-gray-300);
+    }
+
+    .control-section-body {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .stat-label { color: var(--gev-gray-300); }
+    .stat-value { font-family: var(--font-mono); font-weight: 700; }
+
+    .round-control-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .admin-timer-display {
+      font-family: var(--font-mono);
+      font-size: 3rem;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 0;
+      line-height: 1;
+    }
+
+    .admin-timer-display.warning { color: var(--gev-gold); }
+    .admin-timer-display.urgent  { color: var(--gev-red-light); animation: timer-pulse 0.5s ease-in-out infinite; }
+
+    /* ─── Main content ────────────────────────────── */
+    .admin-main {
+      padding: 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ─── Stats bar ───────────────────────────────── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+    }
+
+    @media (max-width: 700px) {
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .stat-card {
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+
+    .stat-card-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gev-gray-300); margin-bottom: 0.35rem; }
+    .stat-card-value { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 700; line-height: 1; }
+    .stat-card-sub   { font-size: 0.7rem; color: var(--gev-gray-500); margin-top: 0.2rem; }
+
+    /* ─── Teams grid ──────────────────────────────── */
+    .teams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 0.875rem;
+    }
+
+    .team-card {
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color var(--transition);
+    }
+
+    .team-card.submitted { border-color: rgba(120,190,32,0.4); }
+    .team-card.waiting   { border-color: var(--gev-border); }
+
+    .team-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--gev-border);
+    }
+
+    .team-card-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .team-card-name { font-size: 0.9rem; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .team-card-status {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    .team-card-status.submitted { background: rgba(120,190,32,0.15); color: var(--gev-green); }
+    .team-card-status.waiting   { background: rgba(148,163,184,0.1); color: var(--gev-gray-500); }
+    .team-card-status.offline   { background: rgba(214,43,43,0.1); color: var(--gev-red-light); }
+
+    .team-card-body { padding: 0.875rem 1rem; }
+
+    .team-alloc-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .team-alloc-label { font-size: 0.75rem; color: var(--gev-gray-300); }
+    .team-alloc-value { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; }
+
+    .team-revenue {
+      margin-top: 0.75rem;
+      padding-top: 0.625rem;
+      border-top: 1px solid var(--gev-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .team-revenue-label { font-size: 0.7rem; color: var(--gev-gray-500); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .team-revenue-value { font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: var(--gev-blue-light); }
+
+    /* ─── Leaderboard section ─────────────────────── */
+    .leaderboard-card {
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .leaderboard-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--gev-border);
+    }
+
+    /* ─── Event reveal banner ─────────────────────── */
+    .current-event-banner {
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+    }
+
+    /* ─── PIN gate ────────────────────────────────── */
+    .pin-gate {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1.5rem;
+      padding: 2rem;
+      background: radial-gradient(ellipse at 50% 0%, rgba(0,94,184,0.15) 0%, transparent 70%);
+    }
+
+    .pin-card {
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    /* ─── Manual entry modal ──────────────────────── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal {
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.25rem; }
+
+    /* ─── Segment progress bars in event card ─────── */
+    .event-seg-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.8rem;
+      margin-bottom: 0.4rem;
+    }
+    .event-seg-name  { width: 100px; color: var(--gev-gray-300); }
+    .event-seg-track { flex: 1; height: 6px; background: var(--gev-surface-3); border-radius: 3px; overflow: hidden; }
+    .event-seg-fill  { height: 100%; border-radius: 3px; }
+    .event-seg-pct   { width: 44px; text-align: right; font-family: var(--font-mono); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<!-- ─── PIN Gate (shown until authenticated) ─── -->
+<div id="pin-gate" class="pin-gate">
+  <div class="gev-wordmark" style="flex-direction:column;align-items:center;gap:0.5rem;">
+    <div class="gev-badge" style="font-size:1.2rem;padding:0.6rem 1rem;">GEV</div>
+    <span style="font-size:0.75rem;color:var(--gev-gray-300);text-transform:uppercase;letter-spacing:0.08em;">Admin Dashboard</span>
+  </div>
+  <div class="pin-card">
+    <h2 style="margin-bottom:0.35rem;">Facilitator Access</h2>
+    <p style="font-size:0.875rem;color:var(--gev-gray-300);margin-bottom:1.5rem;">Enter the admin PIN to continue.</p>
+    <div class="input-group" style="margin-bottom:1rem;">
+      <input id="pin-input" class="input-field" type="password" placeholder="Admin PIN" autocomplete="off" />
+    </div>
+    <button id="pin-submit" class="btn btn-primary btn-full">Access Dashboard</button>
+    <p id="pin-error" class="hidden" style="color:var(--gev-red-light);font-size:0.8rem;margin-top:0.75rem;">Incorrect PIN. Try again.</p>
+  </div>
+</div>
+
+<!-- ─── Admin App (shown after auth) ───────────── -->
+<div id="admin-app" class="hidden">
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo-mark">
+      <div class="logo-icon">GEV</div>
+      <div class="logo-text">
+        <span class="logo-name">Strategy Lab</span>
+        <span class="logo-sub">Admin · Facilitator View</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="status-pill lobby" id="admin-status-pill">
+        <span class="status-dot"></span>
+        <span id="admin-status-text">Lobby</span>
+      </span>
+      <button class="btn btn-danger btn-sm" id="reset-btn">Reset Game</button>
+    </div>
+  </header>
+
+  <div class="admin-layout">
+
+    <!-- ═══════ LEFT SIDEBAR ═══════ -->
+    <aside class="admin-sidebar">
+
+      <!-- Timer -->
+      <div class="control-section">
+        <div class="control-section-header">⏱ Round Timer</div>
+        <div class="control-section-body">
+          <div class="admin-timer-display" id="admin-timer">2:00</div>
+          <div class="round-control-grid">
+            <button class="btn btn-ghost btn-sm" id="timer-start-btn">▶ Start</button>
+            <button class="btn btn-ghost btn-sm" id="timer-pause-btn">⏸ Pause</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Round Controls -->
+      <div class="control-section">
+        <div class="control-section-header">🎮 Game Controls</div>
+        <div class="control-section-body">
+          <button class="btn btn-primary btn-full" id="start-game-btn">▶ Start Game (Round 1)</button>
+          <button class="btn btn-gold btn-full hidden" id="reveal-results-btn">📊 Reveal Round Results</button>
+          <button class="btn btn-primary btn-full hidden" id="next-round-btn">→ Start Next Round</button>
+          <button class="btn btn-success btn-full hidden" id="final-results-btn">🏁 Show Final Results</button>
+
+          <div class="divider"></div>
+          <div class="stat-row">
+            <span class="stat-label">Current Round</span>
+            <span class="stat-value" id="ctrl-round">0 / 4</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Game Status</span>
+            <span class="stat-value" id="ctrl-status">Lobby</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Submitted</span>
+            <span class="stat-value" id="ctrl-submitted">0 / 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Event -->
+      <div class="control-section" id="current-event-section" style="display:none;">
+        <div class="control-section-header">📡 Active Event</div>
+        <div class="control-section-body" style="gap:0.5rem;">
+          <div style="font-size:0.875rem;font-weight:700;" id="sidebar-event-name">—</div>
+          <div id="sidebar-event-impacts"></div>
+        </div>
+      </div>
+
+      <!-- Manual Team Entry -->
+      <div class="control-section">
+        <div class="control-section-header">✏️ Manual Team Entry</div>
+        <div class="control-section-body">
+          <p style="font-size:0.75rem;color:var(--gev-gray-500);">Enter a team's allocation manually (e.g. if they're presenting verbally).</p>
+          <button class="btn btn-ghost btn-full btn-sm" id="manual-entry-btn">Open Entry Form</button>
+        </div>
+      </div>
+
+      <!-- Game Link -->
+      <div class="control-section">
+        <div class="control-section-header">🔗 Team Link</div>
+        <div class="control-section-body">
+          <p style="font-size:0.72rem;color:var(--gev-gray-500);word-break:break-all;" id="team-link-display">—</p>
+          <button class="btn btn-ghost btn-full btn-sm" id="copy-link-btn">Copy Link</button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ═══════ MAIN CONTENT ═══════ -->
+    <main class="admin-main">
+
+      <!-- Stats Bar -->
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="stat-card-label">Teams</div>
+          <div class="stat-card-value" id="stat-teams">0</div>
+          <div class="stat-card-sub">registered</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Submitted</div>
+          <div class="stat-card-value green" id="stat-submitted" style="color:var(--gev-green)">0</div>
+          <div class="stat-card-sub" id="stat-submitted-sub">this round</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Round</div>
+          <div class="stat-card-value" id="stat-round">0</div>
+          <div class="stat-card-sub">of 4</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Status</div>
+          <div class="stat-card-value" id="stat-status" style="font-size:1rem;">Lobby</div>
+          <div class="stat-card-sub">game state</div>
+        </div>
+      </div>
+
+      <!-- Current Event Banner (rounds) -->
+      <div class="current-event-banner" id="event-banner" style="display:none;">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+          <span class="round-badge" id="event-banner-round">Round 1</span>
+          <span id="event-banner-name" style="font-weight:700;"></span>
+          <span class="status-pill active" style="margin-left:auto;" id="event-direction-badge">
+            <span class="status-dot"></span>
+            Positive
+          </span>
+        </div>
+        <p id="event-banner-desc" style="font-size:0.8rem;color:var(--gev-gray-100);margin-bottom:0.875rem;"></p>
+        <div id="event-banner-impacts"></div>
+      </div>
+
+      <!-- Teams Grid -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;">
+          <h3>Teams</h3>
+          <span style="font-size:0.75rem;color:var(--gev-gray-500);">Live updates</span>
+        </div>
+        <div class="teams-grid" id="teams-grid">
+          <div class="empty-state" style="grid-column:1/-1;">
+            <div class="empty-state-icon">👥</div>
+            <p class="empty-state-text">No teams have joined yet. Share the team link.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="leaderboard-card" id="leaderboard-section">
+        <div class="leaderboard-card-header">
+          <h3>Leaderboard</h3>
+          <span style="display:flex;align-items:center;gap:0.4rem;font-size:0.75rem;color:var(--gev-gray-300);">
+            <span class="live-dot"></span> Live
+          </span>
+        </div>
+        <div style="padding:0 0.25rem;">
+          <table class="leaderboard-table" id="admin-leaderboard">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Team</th>
+                <th>R1</th>
+                <th>R2</th>
+                <th>R3</th>
+                <th>R4</th>
+                <th>Total</th>
+                <th>Posture</th>
+              </tr>
+            </thead>
+            <tbody id="admin-leaderboard-body">
+              <tr>
+                <td colspan="8" style="text-align:center;padding:2rem;color:var(--gev-gray-500);font-size:0.875rem;">
+                  Leaderboard updates after each round
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+
+  </div><!-- /.admin-layout -->
+
+</div><!-- /#admin-app -->
+
+<!-- ─── Manual Entry Modal ──────────────────────── -->
+<div class="modal-backdrop hidden" id="manual-modal">
+  <div class="modal">
+    <div class="modal-title">Manual Team Entry</div>
+
+    <div class="input-group" style="margin-bottom:1rem;">
+      <label class="input-label">Team</label>
+      <select id="manual-team-select" class="input-field" style="background:var(--gev-surface-2);cursor:pointer;">
+        <option value="">Select team…</option>
+      </select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+      <div class="input-group">
+        <label class="input-label" style="color:var(--seg-power);">Power</label>
+        <input id="manual-power" class="input-field" type="number" min="0" max="100" value="34" />
+      </div>
+      <div class="input-group">
+        <label class="input-label" style="color:var(--seg-wind);">Wind</label>
+        <input id="manual-wind" class="input-field" type="number" min="0" max="100" value="33" />
+      </div>
+      <div class="input-group">
+        <label class="input-label" style="color:var(--seg-electrification);">Electrification</label>
+        <input id="manual-electrification" class="input-field" type="number" min="0" max="100" value="33" />
+      </div>
+    </div>
+
+    <div class="total-bar-wrap" style="margin-bottom:1rem;">
+      <span class="total-bar-label">TOTAL</span>
+      <div class="total-bar-track"><div class="total-bar-fill exact" id="manual-total-bar" style="width:100%;"></div></div>
+      <span class="total-bar-number exact" id="manual-total-num">100</span>
+    </div>
+
+    <div class="input-group" style="margin-bottom:1.25rem;">
+      <label class="input-label">Strategy Posture</label>
+      <div class="strategy-grid" style="grid-template-columns:repeat(3,1fr);">
+        <button class="strategy-btn aggressive" data-strategy="aggressive">
+          <span class="strategy-name aggressive">Aggressive</span>
+        </button>
+        <button class="strategy-btn balanced selected" data-strategy="balanced">
+          <span class="strategy-name balanced">Balanced</span>
+        </button>
+        <button class="strategy-btn resilient" data-strategy="resilient">
+          <span class="strategy-name resilient">Resilient</span>
+        </button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:0.75rem;">
+      <button class="btn btn-ghost" id="manual-cancel">Cancel</button>
+      <button class="btn btn-primary" style="flex:1;" id="manual-submit">Submit for Team</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Supabase SDK -->
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  window._sb = window.supabase.createClient(
+    window.SUPABASE_URL,
+    window.SUPABASE_ANON_KEY
+  );
+  document.dispatchEvent(new Event('supabase-ready'));
+</script>
+<script src="admin.js" defer></script>
+
+</body>
+</html>

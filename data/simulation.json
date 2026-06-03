@@ -1,0 +1,108 @@
+{
+  "game": {
+    "title": "GE Vernova Strategy Lab",
+    "subtitle": "Portfolio Allocation Simulation",
+    "rounds": 4,
+    "roundDuration": 120,
+    "description": "You are a GE Vernova executive team. Allocate your portfolio across three business segments to maximize cumulative revenue over four market rounds."
+  },
+  "segments": {
+    "power": {
+      "name": "Power",
+      "description": "Gas turbines, nuclear services, hydro — stable demand and strong backlog visibility",
+      "baseScore": 120,
+      "colorVar": "--seg-power"
+    },
+    "wind": {
+      "name": "Wind",
+      "description": "Onshore and offshore wind — higher growth potential with execution and supply-chain risk",
+      "baseScore": 85,
+      "colorVar": "--seg-wind"
+    },
+    "electrification": {
+      "name": "Electrification",
+      "description": "Grid modernization, power conversion, high-voltage equipment — structural growth from grid investment",
+      "baseScore": 110,
+      "colorVar": "--seg-electrification"
+    }
+  },
+  "strategies": {
+    "aggressive": {
+      "name": "Aggressive",
+      "description": "Chase the upside — amplifies gains in favorable conditions, exposes you to larger losses",
+      "positiveMultiplier": 1.15,
+      "negativeMultiplier": 0.90
+    },
+    "balanced": {
+      "name": "Balanced",
+      "description": "Neutral risk/reward — consistent performance regardless of market direction",
+      "positiveMultiplier": 1.00,
+      "negativeMultiplier": 1.00
+    },
+    "resilient": {
+      "name": "Resilient",
+      "description": "Protect your downside — limits losses in shocks, but caps upside in rallies",
+      "positiveMultiplier": 0.92,
+      "negativeMultiplier": 1.10
+    }
+  },
+  "events": [
+    {
+      "round": 1,
+      "name": "AI Data Center Demand Surge",
+      "headline": "Hyperscalers accelerate data center buildout",
+      "description": "AI compute demand is outpacing grid capacity. Hyperscalers are signing record power purchase agreements, driving urgent demand for gas turbines and grid infrastructure. Capital is flowing into reliable baseload and electrification.",
+      "direction": "positive",
+      "multipliers": { "power": 1.25, "wind": 1.00, "electrification": 1.10 },
+      "segmentNotes": {
+        "power": "+25% — AI data centers require reliable, always-on baseload power",
+        "wind": "Neutral — intermittency doesn't meet hyperscaler uptime requirements",
+        "electrification": "+10% — Grid interconnection and conversion equipment in high demand"
+      },
+      "debrief": "Teams that over-indexed Power and Electrification captured the AI infrastructure tailwind. Wind allocations were punished for unreliability."
+    },
+    {
+      "round": 2,
+      "name": "Offshore Wind Execution Delay",
+      "headline": "Supply chain bottlenecks stall offshore wind",
+      "description": "Permitting delays, cable shortage, and installation vessel scarcity are forcing offshore wind project deferrals across Europe and North America. Investors rotate back to conventional generation as wind backlogs stretch 18 months.",
+      "direction": "negative",
+      "multipliers": { "power": 1.10, "wind": 0.75, "electrification": 1.00 },
+      "segmentNotes": {
+        "power": "+10% — Gas generation reconfirmed as the reliable bridge fuel",
+        "wind": "-25% — Execution failures and deferrals compress margins significantly",
+        "electrification": "Neutral — Grid investment continues independent of wind volatility"
+      },
+      "debrief": "Resilient strategies protected teams over-exposed to wind. Power rewarded those who maintained allocation."
+    },
+    {
+      "round": 3,
+      "name": "Grid Modernization Policy Push",
+      "headline": "Infrastructure bill accelerates grid hardening",
+      "description": "A landmark federal infrastructure package fast-tracks $200B in grid modernization. Demand for high-voltage equipment, power conversion systems, and grid-scale storage surges. Wind projects in the backlog receive accelerated permitting.",
+      "direction": "positive",
+      "multipliers": { "power": 1.00, "wind": 1.10, "electrification": 1.30 },
+      "segmentNotes": {
+        "power": "Neutral — Steady demand but capital flows toward modernization",
+        "wind": "+10% — Permitting acceleration revives stalled projects",
+        "electrification": "+30% — Grid hardening is the core beneficiary of the infrastructure bill"
+      },
+      "debrief": "Teams that pivoted to Electrification after round 2 are vindicated. The grid modernization thesis plays out."
+    },
+    {
+      "round": 4,
+      "name": "Global Macro Shock",
+      "headline": "Credit crunch triggers capital spending freeze",
+      "description": "A sudden geopolitical escalation triggers a global credit crunch. Utility customers defer capital commitments across all segments. Project cancellations spike and order intake falls sharply. Every segment is hit — but not equally.",
+      "direction": "negative",
+      "multipliers": { "power": 0.90, "wind": 0.85, "electrification": 0.95 },
+      "segmentNotes": {
+        "power": "-10% — Gas backlog provides partial buffer; deferrals still hurt",
+        "wind": "-15% — Development-stage projects are most exposed to financing freeze",
+        "electrification": "-5% — Government-backed grid work provides strongest resilience"
+      },
+      "debrief": "This round rewards defensive positioning. Electrification held up best due to policy backstop. Resilient strategies outperform."
+    }
+  ],
+  "tiebreaker": "highest_crisis_round_score"
+}

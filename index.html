@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GE Vernova Strategy Lab</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ─── Landing page extras ─────────────────────── */
+    .landing-hero {
+      min-height: calc(100vh - 60px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.25rem;
+      text-align: center;
+      background: radial-gradient(ellipse at 50% 0%, rgba(0,94,184,0.18) 0%, transparent 70%);
+    }
+
+    .gev-wordmark {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .gev-badge {
+      background: var(--gev-blue);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      padding: 0.5rem 0.85rem;
+      border-radius: 10px;
+      letter-spacing: -1px;
+    }
+
+    .gev-wordname {
+      text-align: left;
+      line-height: 1.1;
+    }
+
+    .gev-wordname-top {
+      font-size: 1rem;
+      font-weight: 700;
+      color: white;
+      letter-spacing: 0.04em;
+    }
+
+    .gev-wordname-bot {
+      font-size: 0.65rem;
+      color: var(--gev-gray-300);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .hero-headline {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .hero-headline span {
+      background: linear-gradient(135deg, var(--gev-blue-light), var(--gev-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--gev-gray-100);
+      max-width: 520px;
+      line-height: 1.6;
+      margin-bottom: 2.5rem;
+    }
+
+    .join-card {
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow);
+    }
+
+    .join-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      color: var(--gev-white);
+    }
+
+    .segment-info-row {
+      display: flex;
+      gap: 1rem;
+      max-width: 700px;
+      width: 100%;
+    }
+
+    @media (max-width: 600px) {
+      .segment-info-row { flex-direction: column; align-items: center; }
+    }
+
+    .seg-card {
+      flex: 1;
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      min-width: 0;
+    }
+
+    .seg-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .seg-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .seg-name { font-size: 0.85rem; font-weight: 700; }
+    .seg-desc { font-size: 0.72rem; color: var(--gev-gray-300); line-height: 1.4; }
+    .seg-base { font-family: var(--font-mono); font-size: 0.75rem; color: var(--gev-gray-300); margin-top: 0.5rem; }
+
+    /* ─── Lobby ───────────────────────────────────── */
+    .lobby-wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem;
+    }
+
+    .team-welcome {
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .lobby-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .lobby-sub   { color: var(--gev-gray-300); font-size: 0.875rem; }
+
+    .lobby-status {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      padding: 1rem 1.25rem;
+      background: rgba(120,190,32,0.08);
+      border: 1px solid rgba(120,190,32,0.2);
+      border-radius: var(--radius);
+      margin-top: 1.5rem;
+    }
+
+    .lobby-status-text { font-size: 0.875rem; font-weight: 500; }
+
+    .teams-list-card {
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .teams-list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--gev-border);
+    }
+
+    .teams-list-title { font-size: 0.875rem; font-weight: 700; }
+    .teams-count      { font-size: 0.8rem; color: var(--gev-gray-300); }
+
+    .team-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .team-row:last-child { border-bottom: none; }
+    .team-row-name { font-size: 0.875rem; font-weight: 600; }
+    .team-row-time { font-size: 0.72rem; color: var(--gev-gray-500); margin-left: auto; }
+
+    /* ─── Round screen ────────────────────────────── */
+    .round-wrap {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    .round-header-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .round-progress {
+      display: flex;
+      gap: 0.4rem;
+      margin-left: auto;
+    }
+
+    .round-pip {
+      width: 28px;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--gev-surface-3);
+      transition: background 0.3s;
+    }
+
+    .round-pip.done    { background: var(--gev-green); }
+    .round-pip.current { background: var(--gev-blue); }
+
+    .timer-card {
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .timer-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gev-gray-300); }
+
+    .allocation-card {
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .sliders-stack { display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .submitted-banner {
+      background: rgba(120,190,32,0.12);
+      border: 1px solid rgba(120,190,32,0.3);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--gev-green);
+    }
+
+    /* ─── Results screen ──────────────────────────── */
+    .results-wrap {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    .your-result-card {
+      background: var(--gev-surface);
+      border: 1px solid var(--gev-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .result-totals {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+
+    .result-total-box {
+      background: var(--gev-surface-2);
+      border-radius: var(--radius);
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .result-total-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gev-gray-300); margin-bottom: 0.35rem; }
+    .result-total-value { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 700; }
+
+    /* ─── Final screen ────────────────────────────── */
+    .final-wrap {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    .final-header { text-align: center; margin-bottom: 2rem; }
+    .final-header h2 { font-size: 1.5rem; margin-bottom: 0.35rem; }
+  </style>
+</head>
+<body>
+
+<!-- ─── Site Header ─────────────────────────────── -->
+<header class="site-header">
+  <div class="logo-mark">
+    <div class="logo-icon">GEV</div>
+    <div class="logo-text">
+      <span class="logo-name">Strategy Lab</span>
+      <span class="logo-sub">Portfolio Simulation</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="status-pill lobby" id="header-status">
+      <span class="status-dot"></span>
+      <span id="header-status-text">Lobby</span>
+    </span>
+    <span id="header-team-name" class="hidden" style="font-size:0.8rem;font-weight:600;color:var(--gev-gray-300);"></span>
+  </div>
+</header>
+
+<div id="app">
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 1: LANDING / TEAM SETUP
+  ════════════════════════════════════════════ -->
+  <section id="screen-landing" class="screen active">
+    <div class="landing-hero">
+
+      <div class="gev-wordmark">
+        <div class="gev-badge">GEV</div>
+        <div class="gev-wordname">
+          <div class="gev-wordname-top">GE Vernova</div>
+          <div class="gev-wordname-bot">Strategy Lab · 2025</div>
+        </div>
+      </div>
+
+      <h1 class="hero-headline">
+        Portfolio<br/>
+        <span>Allocation Simulation</span>
+      </h1>
+      <p class="hero-sub">
+        You are a GE Vernova executive team. Allocate resources across Power, Wind,
+        and Electrification over four market rounds to maximise cumulative revenue.
+      </p>
+
+      <div class="join-card">
+        <div class="join-title">Set your team name to begin</div>
+        <div class="input-group" style="margin-bottom:1rem;">
+          <input
+            id="team-name-input"
+            class="input-field"
+            type="text"
+            placeholder="e.g. Team Alpha, Power Traders…"
+            maxlength="40"
+            autocomplete="off"
+          />
+        </div>
+        <button id="join-btn" class="btn btn-primary btn-full btn-lg">
+          Join Game →
+        </button>
+        <p id="join-error" class="hidden" style="color:var(--gev-red-light);font-size:0.8rem;margin-top:0.75rem;text-align:center;"></p>
+      </div>
+
+      <div class="segment-info-row">
+        <div class="seg-card">
+          <div class="seg-card-header">
+            <div class="seg-dot" style="background:var(--seg-power);"></div>
+            <span class="seg-name" style="color:var(--seg-power);">Power</span>
+          </div>
+          <p class="seg-desc">Gas turbines, nuclear services, hydro — reliable baseload with strong backlog</p>
+          <p class="seg-base">Base: 120 pts/unit</p>
+        </div>
+        <div class="seg-card">
+          <div class="seg-card-header">
+            <div class="seg-dot" style="background:var(--seg-wind);"></div>
+            <span class="seg-name" style="color:var(--seg-wind);">Wind</span>
+          </div>
+          <p class="seg-desc">Onshore &amp; offshore wind — higher upside with execution and supply-chain risk</p>
+          <p class="seg-base">Base: 85 pts/unit</p>
+        </div>
+        <div class="seg-card">
+          <div class="seg-card-header">
+            <div class="seg-dot" style="background:var(--seg-electrification);"></div>
+            <span class="seg-name" style="color:var(--seg-electrification);">Electrification</span>
+          </div>
+          <p class="seg-desc">Grid modernisation, power conversion — structural growth from grid investment</p>
+          <p class="seg-base">Base: 110 pts/unit</p>
+        </div>
+      </div>
+
+      <p style="margin-top:1.5rem;font-size:0.75rem;color:var(--gev-gray-500);">
+        Facilitator? <a href="admin.html" style="color:var(--gev-blue-light);">Open the Admin Dashboard →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 2: LOBBY
+  ════════════════════════════════════════════ -->
+  <section id="screen-lobby" class="screen">
+    <div class="lobby-wrap">
+
+      <div class="team-welcome">
+        <div class="lobby-title">Welcome, <span id="lobby-team-name" style="color:var(--gev-blue-light);"></span></div>
+        <div class="lobby-sub">You're registered and ready to play.</div>
+
+        <div class="lobby-status">
+          <div class="live-dot"></div>
+          <span class="lobby-status-text">Waiting for the facilitator to start the game…</span>
+        </div>
+      </div>
+
+      <div class="teams-list-card">
+        <div class="teams-list-header">
+          <span class="teams-list-title">Teams Joined</span>
+          <span class="teams-count"><span id="teams-count">0</span> / 10</span>
+        </div>
+        <div id="lobby-teams-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <p class="empty-state-text">Teams will appear here as they join</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 3: ACTIVE ROUND
+  ════════════════════════════════════════════ -->
+  <section id="screen-round" class="screen">
+    <div class="round-wrap">
+
+      <div class="round-header-bar">
+        <span class="round-badge">Round <span id="round-num">1</span> of 4</span>
+
+        <div class="timer-card">
+          <span class="timer-label">Time</span>
+          <span class="timer-display" id="timer-display">2:00</span>
+        </div>
+
+        <div class="round-progress" id="round-pips">
+          <div class="round-pip current" id="pip-1"></div>
+          <div class="round-pip" id="pip-2"></div>
+          <div class="round-pip" id="pip-3"></div>
+          <div class="round-pip" id="pip-4"></div>
+        </div>
+      </div>
+
+      <!-- Event Card -->
+      <div id="event-card-wrap" class="event-card positive" style="margin-bottom:1rem;">
+        <div class="event-round-tag">
+          <span>📡</span>
+          <span>Market Event — Round <span id="event-round-num">1</span></span>
+        </div>
+        <div class="event-name" id="event-name">Loading event…</div>
+        <div class="event-desc" id="event-desc"></div>
+        <div class="event-impacts" id="event-impacts"></div>
+      </div>
+
+      <!-- Allocation -->
+      <div class="allocation-card">
+        <div class="section-title">
+          <h3>Resource Allocation</h3>
+          <span style="font-size:0.75rem;color:var(--gev-gray-500);">Must total 100 pts</span>
+        </div>
+
+        <div class="sliders-stack">
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">
+                <span class="slider-badge" style="background:var(--seg-power);"></span>
+                Power
+              </span>
+              <span class="slider-value power-val" id="val-power">34</span>
+            </div>
+            <input
+              type="range" min="0" max="100" value="34"
+              class="power-slider" id="slider-power"
+              style="--val:34%"
+            />
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">
+                <span class="slider-badge" style="background:var(--seg-wind);"></span>
+                Wind
+              </span>
+              <span class="slider-value wind-val" id="val-wind">33</span>
+            </div>
+            <input
+              type="range" min="0" max="100" value="33"
+              class="wind-slider" id="slider-wind"
+              style="--val:33%"
+            />
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">
+                <span class="slider-badge" style="background:var(--seg-electrification);"></span>
+                Electrification
+              </span>
+              <span class="slider-value electrification-val" id="val-electrification">33</span>
+            </div>
+            <input
+              type="range" min="0" max="100" value="33"
+              class="electrification-slider" id="slider-electrification"
+              style="--val:33%"
+            />
+          </div>
+
+        </div>
+
+        <div class="total-bar-wrap" style="margin-top:1.25rem;">
+          <span class="total-bar-label">TOTAL</span>
+          <div class="total-bar-track">
+            <div class="total-bar-fill" id="total-bar-fill" style="width:100%;"></div>
+          </div>
+          <span class="total-bar-number exact" id="total-bar-num">100</span>
+        </div>
+      </div>
+
+      <!-- Strategy -->
+      <div class="allocation-card">
+        <div class="section-title">
+          <h3>Strategic Posture</h3>
+        </div>
+        <div class="strategy-grid">
+          <button class="strategy-btn aggressive" data-strategy="aggressive">
+            <span class="strategy-name aggressive">Aggressive</span>
+            <span class="strategy-desc">+15% on positive events · −10% on negative</span>
+          </button>
+          <button class="strategy-btn balanced selected" data-strategy="balanced">
+            <span class="strategy-name balanced">Balanced</span>
+            <span class="strategy-desc">Neutral — consistent in all market conditions</span>
+          </button>
+          <button class="strategy-btn resilient" data-strategy="resilient">
+            <span class="strategy-name resilient">Resilient</span>
+            <span class="strategy-desc">−8% on positive events · +10% on negative</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button id="submit-btn" class="btn btn-success btn-full btn-lg" disabled>
+        Submit Allocation
+      </button>
+
+      <div id="submitted-banner" class="submitted-banner hidden" style="margin-top:1rem;">
+        <span>✓</span>
+        <span>Allocation submitted — waiting for all teams and the facilitator to reveal results…</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 4: ROUND RESULTS
+  ════════════════════════════════════════════ -->
+  <section id="screen-results" class="screen">
+    <div class="results-wrap">
+
+      <div class="your-result-card">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;">
+          <span class="round-badge">Round <span id="result-round-num">1</span> Results</span>
+          <span id="result-strategy-badge" style="font-size:0.75rem;font-weight:600;color:var(--gev-gray-300);"></span>
+        </div>
+
+        <div class="score-breakdown" id="score-breakdown"></div>
+
+        <div class="result-totals">
+          <div class="result-total-box">
+            <div class="result-total-label">Round Revenue</div>
+            <div class="result-total-value blue" id="result-round-rev">—</div>
+          </div>
+          <div class="result-total-box">
+            <div class="result-total-label">Cumulative Revenue</div>
+            <div class="result-total-value green" id="result-total-rev">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+          <h3>Leaderboard</h3>
+          <span class="live-dot" style="margin-left:0.5rem;"></span>
+        </div>
+        <table class="leaderboard-table" id="results-leaderboard">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team</th>
+              <th>Round</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="results-leaderboard-body"></tbody>
+        </table>
+      </div>
+
+      <div id="results-debrief" class="event-card positive" style="margin-top:1rem;display:none;">
+        <div class="event-round-tag">💡 Round Insight</div>
+        <div id="results-debrief-text" style="font-size:0.875rem;color:var(--gev-gray-100);margin-top:0.35rem;"></div>
+      </div>
+
+      <div style="margin-top:1.25rem;text-align:center;color:var(--gev-gray-500);font-size:0.875rem;" id="next-round-msg">
+        Waiting for the facilitator to start the next round…
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 5: FINAL RESULTS
+  ════════════════════════════════════════════ -->
+  <section id="screen-final" class="screen">
+    <div class="final-wrap">
+
+      <div class="final-header">
+        <h2>Simulation Complete</h2>
+        <p style="color:var(--gev-gray-300);">Final standings after 4 rounds</p>
+      </div>
+
+      <div class="winner-card" id="final-winner-card" style="margin-bottom:1.5rem;">
+        <div class="winner-trophy">🏆</div>
+        <div class="winner-label">Winner</div>
+        <div class="winner-name" id="final-winner-name">—</div>
+        <div class="winner-revenue" id="final-winner-revenue">—</div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:1rem;">Final Leaderboard</h3>
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team</th>
+              <th>R1</th>
+              <th>R2</th>
+              <th>R3</th>
+              <th>R4</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="final-leaderboard-body"></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:1.5rem;text-align:center;">
+        <p style="color:var(--gev-gray-300);font-size:0.875rem;margin-bottom:0.5rem;">
+          Thank you for participating in the GE Vernova Strategy Lab.
+        </p>
+        <button class="btn btn-ghost btn-sm" onclick="location.reload()">Play Again</button>
+      </div>
+
+    </div>
+  </section>
+
+</div><!-- /#app -->
+
+<!-- Toast notifications -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Supabase SDK -->
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  window._sb = window.supabase.createClient(
+    window.SUPABASE_URL,
+    window.SUPABASE_ANON_KEY
+  );
+  document.dispatchEvent(new Event('supabase-ready'));
+</script>
+<script src="app.js" defer></script>
+
+</body>
+</html>
