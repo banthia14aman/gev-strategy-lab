@@ -424,7 +424,10 @@ function subscribeToGame() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'game_state'  }, refreshAdminState)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'teams'       }, refreshAdminState)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'team_rounds' }, refreshAdminState)
-    .subscribe(s => { if (s === 'SUBSCRIBED') refreshAdminState(); });
+    .subscribe();
+
+  // Fetch immediately via REST — don't wait for WebSocket handshake
+  refreshAdminState();
 }
 
 // ─── Team link ────────────────────────────────────────────────

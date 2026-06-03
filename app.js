@@ -465,9 +465,9 @@ async function submitAllocation() {
 
 // ─── Join game ────────────────────────────────────────────────
 async function joinGame(name) {
-  // Pick color based on existing team count
-  const { count } = await sb.from('teams').select('*', { count: 'exact', head: true });
-  const color = TEAM_COLORS[(count || 0) % TEAM_COLORS.length];
+  // Pick color based on existing team count (plain select avoids HEAD request issues)
+  const { data: existing } = await sb.from('teams').select('id');
+  const color = TEAM_COLORS[((existing?.length) || 0) % TEAM_COLORS.length];
 
   const { data: team, error } = await sb.from('teams').insert({ name, color }).select().single();
   if (error) throw error;
@@ -495,9 +495,10 @@ function subscribeToGame() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'game_state'  }, refreshState)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'teams'       }, refreshState)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'team_rounds' }, refreshState)
-    .subscribe(status => {
-      if (status === 'SUBSCRIBED') refreshState();
-    });
+    .subscribe();
+
+  // Fetch state immediately via REST — don't block on WebSocket handshake
+  refreshState();
 }
 
 // ─── Boot ────────────────────────────────────────────────────
