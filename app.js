@@ -569,4 +569,5 @@ async function init() {
   setupStrategyButtons();
 }
 
-document.addEventListener('supabase-ready', init);
+// `defer` guarantees DOM is parsed and window._sb is set before this runs
+init();
