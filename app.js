@@ -559,7 +559,11 @@ async function init() {
     if (headerName) { headerName.textContent = savedName; headerName.classList.remove('hidden'); }
     setText('lobby-team-name', savedName);
 
-    await sb.from('teams').update({ last_active: new Date().toISOString() }).eq('id', savedId).catch(() => {});
+    // NOTE: Supabase query builders are thenable but have no .catch() — using
+    // .catch() here throws synchronously and aborts init(). Wrap in try/catch.
+    try {
+      await sb.from('teams').update({ last_active: new Date().toISOString() }).eq('id', savedId);
+    } catch (_) { /* best-effort heartbeat; ignore */ }
     subscribeToGame();
     return;
   }
