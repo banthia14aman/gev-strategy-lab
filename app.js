@@ -213,9 +213,15 @@ function resetRoundUI() {
   document.querySelectorAll('#screen-round .strategy-btn').forEach(b => b.classList.remove('selected'));
   document.querySelector('#screen-round .strategy-btn[data-strategy="balanced"]')?.classList.add('selected');
   state.selectedStrategy = 'balanced';
+
+  // Clear submission flag and timer so each round starts fresh
+  state.hasSubmitted = false;
+  clearInterval(state.timerInterval);
+  state.timerInterval = null;
+
   hide('submitted-banner');
   const btn = document.getElementById('submit-btn');
-  if (btn) { btn.disabled = false; btn.classList.remove('hidden'); }
+  if (btn) { btn.disabled = false; btn.classList.remove('hidden'); btn.textContent = 'Submit Allocation'; }
   updateTotalBar();
 }
 
@@ -349,6 +355,10 @@ async function refreshState() {
   const myTeam = teams.find(t => t.id === state.teamId);
 
   updateHeaderStatus(status);
+
+  // Save previous values BEFORE updating state — needed for change detection below
+  const prevStatus = state.gameStatus;
+  const prevRound  = state.currentRound;
   state.gameStatus   = status;
   state.currentRound = round;
 
@@ -361,17 +371,23 @@ async function refreshState() {
   const roundMatch = status.match(/^round(\d)$/);
   if (roundMatch) {
     const r = parseInt(roundMatch[1], 10);
-    if (state.currentRound !== r || !state.hasSubmitted) {
-      // New round started
-      if (state.gameStatus !== status) resetRoundUI();
-      state.hasSubmitted = !!(myTeam?.team_rounds?.find(x => x.round_number === r && x.submitted));
+
+    // Reset UI whenever we move to a different round or re-enter a round from results
+    if (prevRound !== r || prevStatus !== status) {
+      resetRoundUI();
     }
+
+    // Always derive submission truth from DB, not local flag
+    state.hasSubmitted = !!(myTeam?.team_rounds?.find(x => x.round_number === r && x.submitted));
+
     setScreen('round');
     setText('round-num',      r.toString());
     setText('event-round-num', r.toString());
     updateRoundPips(r);
     renderEventCard(r - 1);
-    if (state.timerRemaining >= SIM.game.roundDuration - 5 && !state.timerInterval) {
+
+    // Start timer once per round (resetRoundUI clears it, so this fires exactly once)
+    if (!state.timerInterval) {
       startLocalTimer(SIM.game.roundDuration);
     }
 
@@ -380,6 +396,9 @@ async function refreshState() {
       show('submitted-banner');
       const btn = document.getElementById('submit-btn');
       if (btn) btn.disabled = true;
+    } else {
+      show('submit-btn');
+      hide('submitted-banner');
     }
     return;
   }
