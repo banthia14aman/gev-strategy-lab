@@ -523,6 +523,13 @@ input[type="range"].electrification-slider::-webkit-slider-thumb { border-color:
   font-family: var(--font-mono);
 }
 
+/* The Team column (2nd) is text, not numbers — keep it left-aligned so the
+   header sits directly above the team names instead of floating to the right. */
+.leaderboard-table th:nth-child(2),
+.leaderboard-table td:nth-child(2) {
+  text-align: left;
+}
+
 .leaderboard-table tr:hover td { background: rgba(255,255,255,0.03); }
 
 .rank-cell {

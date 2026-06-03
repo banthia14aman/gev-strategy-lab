@@ -316,7 +316,7 @@ function renderLeaderboard(teams, bodyId, currentRound) {
   if (!tbody) return;
   const sorted = [...teams].sort((a,b) => (b.total_revenue||0) - (a.total_revenue||0));
   if (sorted.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--gev-gray-500);">No teams yet</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--gev-gray-500);">No teams yet</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -326,6 +326,9 @@ function renderLeaderboard(teams, bodyId, currentRound) {
     const isYou = team.id === state.teamId;
     const roundData = team.team_rounds?.find(r => r.round_number === currentRound);
     const submitted = roundData?.submitted;
+    const roundRev = roundData?.revenue != null
+      ? roundData.revenue.toLocaleString()
+      : (submitted ? '0' : '—');
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><div class="rank-cell"><span class="rank-num ${rankClass}">${rank}</span></div></td>
@@ -335,8 +338,7 @@ function renderLeaderboard(teams, bodyId, currentRound) {
           <span class="team-name-cell">${team.name}${isYou?'<span class="you-badge">You</span>':''}</span>
         </div>
       </td>
-      <td>${submitted?`<span class="submitted-check done">✓</span>`:`<span class="submitted-check waiting">…</span>`}</td>
-      <td class="revenue-cell">${roundData?.revenue != null ? roundData.revenue.toLocaleString() : '—'}</td>
+      <td class="revenue-cell">${roundRev}</td>
       <td class="revenue-cell" style="color:var(--gev-blue-light);font-weight:700;">${(team.total_revenue||0).toLocaleString()}</td>
     `;
     tbody.appendChild(tr);
